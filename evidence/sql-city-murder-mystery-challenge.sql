@@ -24,15 +24,15 @@
 
 -- Add a CTE to hold the info for the two witnesses
 
-with witnesses as (
-  select *
-  from person
-  where
-    lower(address_street_name) = 'northwestern dr'
-    or (lower(name) like '%annabel%' 
-		and lower(address_street_name) = 'franklin ave'
-	)
-)
+--with witnesses as (
+ -- select *
+ -- from person
+ -- where
+  --  lower(address_street_name) = 'northwestern dr'
+ --   or (lower(name) like '%annabel%' 
+--		and lower(address_street_name) = 'franklin ave'
+	--)
+--)
 
 --select *
 --from witnesses
@@ -69,24 +69,51 @@ with witnesses as (
 --select * 
 --from get_fit_now_check_in
 
--- Using the infro from Morty's and Annabel's statements we get that:
+-- person table with get_fit_now_member table on person_id;
+
+-- get_fit_now_member table with get_fit_now_check_in table to validate check in time;
+
+-- Using the info from Morty's statement we get that:
 -- GENDER: male
 -- MEMBERSHIP STATUS: gold
 -- MEMBERSHIP ID: 48Z......
 -- PLATE NUMBER: H42W
--- CHECK IN DATE: 01/09/2018
 
--- We can join the: 
--- person table with get_fit_now_member table on person_id;
--- person table with drivers_license table on person_id to get the suspect's plate number
--- and gender;
--- get_fit_now_member table with get_fit_now_check_in table to validate check in time;
+-- We can join the person table with drivers_license table on person_id 
+-- to get the suspect's plate number, gender and name;
 
-select * from drivers_license
+-- Store the results of this in a CTE potential_suspects.
 
---select *
---from person p
---left join drivers_license d
---on p.id=d.id
---where d
+-- Left joined the get_fit_now_member table on person_id and 
+-- was able to exclude two of the suspects..
 
+-- PS:. Membership _ID matches the one given by Morty 
+-- in his statement also Membership_Status.
+
+--Good job in spilling the tea, Morty!
+-- #scorpioVibes #theNancyDrewofSQL #mortyBringsTheReceipts
+
+with potential_suspects as (
+  select p.id as person_id,
+  p.name,
+  d.age,
+  d.gender,
+  d.plate_number,
+  p.license_id,
+  p.address_number
+  from person p
+  left join drivers_license d 
+  on p.license_id=d.id
+  where d.plate_number like '%H42W%'
+)
+
+select s.person_id,
+s.name,
+s.gender,
+s.plate_number,
+m.id as GFN_member_id,
+m.membership_status
+from potential_suspects s
+left join get_fit_now_member m on s.person_id=m.person_id
+
+order by m.id desc
